@@ -26,6 +26,7 @@
 
 
 ```python
+#Import statments for required Packages
 import os
 import json
 import pandas as pd
@@ -36,11 +37,13 @@ InteractiveShell.ast_node_interactivity = "all"
 
 
 ```python
+#read the CSV files into 2 data frames
 file_schools = os.path.join('Resources', 'schools_complete.csv')
 file_students = os.path.join('Resources', 'students_complete.csv')
 schools_df = pd.read_csv(file_schools)
 students_df = pd.read_csv(file_students)
 
+#rename the column headers as required
 students_df = students_df.rename(columns={"Student ID":"Student_ID",
                                           "name":"Student_Name",
                                           "gender":"Gender",
@@ -55,13 +58,18 @@ schools_df = schools_df.rename(columns={"School ID":"School_ID",
                                         "size":"Size",
                                         "budget":"Budget"
                                        })
+#merge both the data sets on Schoolname, so that the entire dataset is in a single dataframe
 schools_students_DF = pd.merge(schools_df, students_df, on=["School_Name"])
+
+#create Pass columns for math and reading. If score>65 pass, else fail
 schools_students_DF["Math_Pass"]= np.where(schools_students_DF['Math_Score'] > 65, "Pass", "Fail")
 schools_students_DF["Reading_Pass"]= np.where(schools_students_DF['Reading_Score'] > 65, "Pass", "Fail")
 
+#rearrange the columns 
 schools_students_DF = schools_students_DF[["Student_ID","Student_Name","Gender","Grade","Reading_Score","Reading_Pass"
                      ,"Math_Score","Math_Pass","School_ID","School_Name","School Type","Size","Budget"]]
 
+#check few records to understand the dataset
 schools_students_DF.head(10)
 
 ```
@@ -273,15 +281,22 @@ schools_students_DF.head(10)
 
 
 ```python
+#total unique number of schools
 total_schools =  len(schools_students_DF["School_Name"].unique())
+# total number of students
 total_student =  schools_students_DF["Student_ID"].count()
+#budget is repeated for each student, so just pick only one value 
 total_budget = sum(schools_students_DF["Budget"].unique())
+#averagescore
 avg_math_score = schools_students_DF["Math_Score"].sum()/total_student
 avg_reading_score = schools_students_DF["Reading_Score"].sum()/total_student
+#passing percent = (total pass / total )*100
 passing_math = schools_students_DF[schools_students_DF["Math_Pass"]=="Pass"].count()["Student_ID"] / total_student * 100
 passing_reading = schools_students_DF[schools_students_DF["Reading_Pass"]=="Pass"].count()["Student_ID"] / total_student * 100
+#overall passing percent= avg(passing amth , passing reading)
 overall_passing_rate = (passing_math + passing_reading) / 2
 
+#create dataframe
 District_Summary_PD = pd.DataFrame({
     "Total Schools": [total_schools],
     "Total Students": [total_student],
@@ -292,7 +307,7 @@ District_Summary_PD = pd.DataFrame({
     "% Passing Reading" : [passing_reading],
     "% Overall Passing Rate" : [overall_passing_rate]
 })
-
+#rearrange columns in dataframe
 District_Summary_PD = District_Summary_PD[[
     "Total Schools",
     "Total Students",
@@ -303,7 +318,7 @@ District_Summary_PD = District_Summary_PD[[
     "% Passing Reading",
     "% Overall Passing Rate"
 ]]
-
+#format required columns
 District_Summary_PD["Total Budget"] = District_Summary_PD["Total Budget"].map("${0:,.2f}".format)
 District_Summary_PD["Total Students"] = District_Summary_PD["Total Students"].map("{0:,.0f}".format)
 District_Summary_PD
@@ -362,6 +377,8 @@ District_Summary_PD
 
 
 ```python
+#school level aggregations
+#create group by data set on School
 school_group = schools_students_DF.groupby("School_Name")
 school_group_pass_math = schools_students_DF.loc[(schools_students_DF["Math_Pass"] == "Pass")]
 school_group_pass_reading = schools_students_DF.loc[(schools_students_DF["Reading_Pass"] == "Pass")]
@@ -379,7 +396,7 @@ sg_passing_overall_df = (sg_passing_math_df + sg_passing_reading_df) / 2
 
 
 
-
+#create dictionary
 School_Summary = { 
     "School Type": sg_school_type,
     "Total Students": sg_total_students,
@@ -392,8 +409,10 @@ School_Summary = {
     "% Overall Passing Rate" : sg_passing_overall_df
 }
 
+#create dataframe
 School_Summary_DF = pd.DataFrame(School_Summary)
 
+#rearrange dataframe
 School_Summary_DF = School_Summary_DF[[ 
     "School Type",
     "Total Students",
@@ -406,6 +425,7 @@ School_Summary_DF = School_Summary_DF[[
     "% Overall Passing Rate"
 ]]
 
+#format required columns
 School_Summary_DF["Total School Budget"] = School_Summary_DF["Total School Budget"].map("${0:,.2f}".format)
 School_Summary_DF["Per Student Budget"] = School_Summary_DF["Per Student Budget"].map("${0:,.2f}".format)
 
@@ -651,7 +671,9 @@ School_Summary_DF
 
 
 ```python
+#sort by overall passing rate in descending order
 School_Summary_DF = School_Summary_DF.sort_values(by="% Overall Passing Rate", ascending=False)
+#diplay top 5 records - top performing schools by passing rate
 School_Summary_DF.head(5)
 
 
@@ -772,7 +794,9 @@ School_Summary_DF.head(5)
 
 
 ```python
+#sort by overall passing rate in ascending order
 School_Summary_DF = School_Summary_DF.sort_values(by="% Overall Passing Rate", ascending=True)
+#diplay bottom 5 records - bottom performing schools by passing rate
 School_Summary_DF.head(5)
 
 ```
@@ -892,21 +916,25 @@ School_Summary_DF.head(5)
 
 
 ```python
+#create a subset of data for each grade
 Grade_9th = schools_students_DF.loc[(schools_students_DF["Grade"] == "9th")]
 Grade_10th = schools_students_DF.loc[(schools_students_DF["Grade"] == "10th")]
 Grade_11th = schools_students_DF.loc[(schools_students_DF["Grade"] == "11th")]
 Grade_12th = schools_students_DF.loc[(schools_students_DF["Grade"] == "12th")]
 
+#create dataset on group by school name  for each grade subset
 Grade_9th_group = Grade_9th.groupby("School_Name")
 Grade_10th_group = Grade_10th.groupby("School_Name")
 Grade_11th_group = Grade_11th.groupby("School_Name")
 Grade_12th_group = Grade_12th.groupby("School_Name")
 
+#calcualte average math score for each. grade dataset
 math_Avg_9th = Grade_9th_group["Math_Score"].mean()
 math_Avg_10th = Grade_10th_group["Math_Score"].mean()
 math_Avg_11th = Grade_11th_group["Math_Score"].mean()
 math_Avg_12th = Grade_12th_group["Math_Score"].mean()
 
+#create a dictionary to mage the school level average math into columns
 Math_Grade_Summary = { 
     "9th": math_Avg_9th,
     "10th": math_Avg_10th,
@@ -914,8 +942,10 @@ Math_Grade_Summary = {
     "12th" : math_Avg_12th
 }
 
+#convert to dataframe
 Math_Grade_Summary_DF = pd.DataFrame(Math_Grade_Summary)
 
+#rename column headers as required
 Math_Grade_Summary_DF = Math_Grade_Summary_DF[[ 
     "9th",
     "10th",
@@ -1081,20 +1111,24 @@ Math_Grade_Summary_DF
 
 
 ```python
+#create a subset of data for each grade
 reading_Avg_9th = Grade_9th_group["Reading_Score"].mean()
 reading_Avg_10th = Grade_10th_group["Reading_Score"].mean()
 reading_Avg_11th = Grade_11th_group["Reading_Score"].mean()
 reading_Avg_12th = Grade_12th_group["Reading_Score"].mean()
 
+#create dataset on group by school name  for each grade subset
 Reading_Grade_Summary = { 
-    "9th": math_Avg_9th,
-    "10th": math_Avg_10th,
-    "11th" : math_Avg_11th,
-    "12th" : math_Avg_12th
+    "9th": reading_Avg_9th,
+    "10th": reading_Avg_10th,
+    "11th" : reading_Avg_11th,
+    "12th" : reading_Avg_12th
 }
 
+#convert to dataframe
 Reading_Grade_Summary_DF = pd.DataFrame(Reading_Grade_Summary)
 
+#convert to dataframe
 Reading_Grade_Summary_DF = Reading_Grade_Summary_DF[[ 
     "9th",
     "10th",
@@ -1145,108 +1179,108 @@ Reading_Grade_Summary_DF
   <tbody>
     <tr>
       <th>Bailey High School</th>
-      <td>77.083676</td>
-      <td>76.996772</td>
-      <td>77.515588</td>
-      <td>76.492218</td>
+      <td>81.303155</td>
+      <td>80.907183</td>
+      <td>80.945643</td>
+      <td>80.912451</td>
     </tr>
     <tr>
       <th>Cabrera High School</th>
-      <td>83.094697</td>
-      <td>83.154506</td>
-      <td>82.765560</td>
-      <td>83.277487</td>
+      <td>83.676136</td>
+      <td>84.253219</td>
+      <td>83.788382</td>
+      <td>84.287958</td>
     </tr>
     <tr>
       <th>Figueroa High School</th>
-      <td>76.403037</td>
-      <td>76.539974</td>
-      <td>76.884344</td>
-      <td>77.151369</td>
+      <td>81.198598</td>
+      <td>81.408912</td>
+      <td>80.640339</td>
+      <td>81.384863</td>
     </tr>
     <tr>
       <th>Ford High School</th>
-      <td>77.361345</td>
-      <td>77.672316</td>
-      <td>76.918058</td>
-      <td>76.179963</td>
+      <td>80.632653</td>
+      <td>81.262712</td>
+      <td>80.403642</td>
+      <td>80.662338</td>
     </tr>
     <tr>
       <th>Griffin High School</th>
-      <td>82.044010</td>
-      <td>84.229064</td>
-      <td>83.842105</td>
-      <td>83.356164</td>
+      <td>83.369193</td>
+      <td>83.706897</td>
+      <td>84.288089</td>
+      <td>84.013699</td>
     </tr>
     <tr>
       <th>Hernandez High School</th>
-      <td>77.438495</td>
-      <td>77.337408</td>
-      <td>77.136029</td>
-      <td>77.186567</td>
+      <td>80.866860</td>
+      <td>80.660147</td>
+      <td>81.396140</td>
+      <td>80.857143</td>
     </tr>
     <tr>
       <th>Holden High School</th>
-      <td>83.787402</td>
-      <td>83.429825</td>
-      <td>85.000000</td>
-      <td>82.855422</td>
+      <td>83.677165</td>
+      <td>83.324561</td>
+      <td>83.815534</td>
+      <td>84.698795</td>
     </tr>
     <tr>
       <th>Huang High School</th>
-      <td>77.027251</td>
-      <td>75.908735</td>
-      <td>76.446602</td>
-      <td>77.225641</td>
+      <td>81.290284</td>
+      <td>81.512386</td>
+      <td>81.417476</td>
+      <td>80.305983</td>
     </tr>
     <tr>
       <th>Johnson High School</th>
-      <td>77.187857</td>
-      <td>76.691117</td>
-      <td>77.491653</td>
-      <td>76.863248</td>
+      <td>81.260714</td>
+      <td>80.773431</td>
+      <td>80.616027</td>
+      <td>81.227564</td>
     </tr>
     <tr>
       <th>Pena High School</th>
-      <td>83.625455</td>
-      <td>83.372000</td>
-      <td>84.328125</td>
-      <td>84.121547</td>
+      <td>83.807273</td>
+      <td>83.612000</td>
+      <td>84.335938</td>
+      <td>84.591160</td>
     </tr>
     <tr>
       <th>Rodriguez High School</th>
-      <td>76.859966</td>
-      <td>76.612500</td>
-      <td>76.395626</td>
-      <td>77.690748</td>
+      <td>80.993127</td>
+      <td>80.629808</td>
+      <td>80.864811</td>
+      <td>80.376426</td>
     </tr>
     <tr>
       <th>Shelton High School</th>
-      <td>83.420755</td>
-      <td>82.917411</td>
-      <td>83.383495</td>
-      <td>83.778976</td>
+      <td>84.122642</td>
+      <td>83.441964</td>
+      <td>84.373786</td>
+      <td>82.781671</td>
     </tr>
     <tr>
       <th>Thomas High School</th>
-      <td>83.590022</td>
-      <td>83.087886</td>
-      <td>83.498795</td>
-      <td>83.497041</td>
+      <td>83.728850</td>
+      <td>84.254157</td>
+      <td>83.585542</td>
+      <td>83.831361</td>
     </tr>
     <tr>
       <th>Wilson High School</th>
-      <td>83.085578</td>
-      <td>83.724422</td>
-      <td>83.195326</td>
-      <td>83.035794</td>
+      <td>83.939778</td>
+      <td>84.021452</td>
+      <td>83.764608</td>
+      <td>84.317673</td>
     </tr>
     <tr>
       <th>Wright High School</th>
-      <td>83.264706</td>
-      <td>84.010288</td>
-      <td>83.836782</td>
-      <td>83.644986</td>
+      <td>83.833333</td>
+      <td>83.812757</td>
+      <td>84.156322</td>
+      <td>84.073171</td>
     </tr>
   </tbody>
 </table>
@@ -1258,6 +1292,7 @@ Reading_Grade_Summary_DF
 
 
 ```python
+# calcualtions for each school
 ss_total_students = school_group['Student_ID'].count()
 ss_total_math = school_group['Math_Score'].sum()
 ss_total_reading = school_group['Reading_Score'].sum()
@@ -1266,6 +1301,7 @@ ss_pass_reading = school_group_pass_reading.groupby("School_Name")["Student_ID"]
 ss_total_budget = school_group['Budget'].min()
 ss_student_budget = ss_total_budget / ss_total_students
 
+#create dictionary for the above calculated lists
 School_score_Summary = { 
     "Total Students": ss_total_students,
     "Total Math Score" : ss_total_math,
@@ -1276,20 +1312,27 @@ School_score_Summary = {
     "Per Student Budget" : ss_student_budget
 }
 
+#convert to Dataframe
 School_score_Summary_DF = pd.DataFrame(School_score_Summary)
 
+#create bins  based on spending for each student
 bins = [0,585,615,645,675]
+#group names
 group_names = ['<$585', '$585-615', '$615-645', '$645-675']
+#cut the dataframe into bins  based on 'per student budget'
 School_score_Summary_DF["Spending Ranges (Per Student)"] =  pd.cut(School_score_Summary_DF["Per Student Budget"], bins, labels=group_names)
 
+#create group by data set on spending buckets
 school_spend_group = School_score_Summary_DF.groupby("Spending Ranges (Per Student)")
  
+#calcualtns for each of these buckets 
 spend_avg_math = school_spend_group["Total Math Score"].sum() / school_spend_group["Total Students"].sum()
 spend_avg_reading = school_spend_group["Total Reading Score"].sum() / school_spend_group["Total Students"].sum()
 spend_pass_math = (school_spend_group["Maths passed count"].sum() / school_spend_group["Total Students"].sum())*100
 spend_pass_reading = (school_spend_group["Reading passed count"].sum() / school_spend_group["Total Students"].sum())*100
 spend_overall = (spend_pass_math + spend_pass_reading) / 2
 
+#create dictionary os lists for calculations
 School_spend_Summary = { 
     "Average Math Score": spend_avg_math,
     "Average Reading Score" : spend_avg_reading,
@@ -1298,8 +1341,10 @@ School_spend_Summary = {
     "% Overall Passing Rate" : spend_overall 
 }
 
+#convert to dataframe
 School_spend_Summary_DF = pd.DataFrame(School_spend_Summary)
 
+#rearrange the columns
 School_spend_Summary_DF = School_spend_Summary_DF[[
     "Average Math Score",
     "Average Reading Score",
@@ -1390,6 +1435,7 @@ School_spend_Summary_DF
 
 
 ```python
+# calcualtions for each school
 sz_total_students = school_group['Student_ID'].count()
 sz_total_math = school_group['Math_Score'].sum()
 sz_total_reading = school_group['Reading_Score'].sum()
@@ -1398,6 +1444,7 @@ sz_pass_reading = school_group_pass_reading.groupby("School_Name")["Student_ID"]
 sz_total_budget = school_group['Budget'].min()
 sz_student_budget = sz_total_budget / sz_total_students
 
+#create dictionary for the above calculated lists
 School_size_Summary = { 
     "Total Students": ss_total_students,
     "Total Math Score" : ss_total_math,
@@ -1408,20 +1455,27 @@ School_size_Summary = {
     "Per Student Budget" : ss_student_budget
 }
 
+#create dataframe
 School_size_Summary_DF = pd.DataFrame(School_size_Summary)
 
+#create bins
 bins1 = [0,1000,2000,5000]
+#create list of bin labels
 group_names1 = ['small(<1000)', 'Medium(1000-2000)', 'Large(2000-5000)']
+#create a new column for binning
 School_size_Summary_DF["School Size"] =  pd.cut(School_size_Summary_DF["Total Students"], bins1, labels=group_names1)
 
+#create data group based on school size bin
 school_size_group = School_size_Summary_DF.groupby("School Size")
  
+#calculatons 
 size_avg_math = school_size_group["Total Math Score"].sum() / school_size_group["Total Students"].sum()
 size_avg_reading = school_size_group["Total Reading Score"].sum() / school_size_group["Total Students"].sum()
 size_pass_math = (school_size_group["Maths passed count"].sum() / school_size_group["Total Students"].sum())*100
 size_pass_reading = (school_size_group["Reading passed count"].sum() / school_size_group["Total Students"].sum())*100
 size_overall = (size_pass_math + size_pass_reading) / 2
 
+#dictionary of the calculated lists
 School_size_Summary = { 
     "Average Math Score": size_avg_math,
     "Average Reading Score" : size_avg_reading,
@@ -1430,8 +1484,10 @@ School_size_Summary = {
     "% Overall Passing Rate" : size_overall 
 }
 
+#create dataframe
 School_size_Summary_DF = pd.DataFrame(School_size_Summary)
 
+#rearrange columns
 School_size_Summary_DF = School_size_Summary_DF[[
     "Average Math Score",
     "Average Reading Score",
@@ -1514,29 +1570,33 @@ School_size_Summary_DF
 
 
 ```python
+#group by school type
 school_type_group = schools_students_DF.groupby("School Type")
 school_type_group_pass_math = schools_students_DF.loc[(schools_students_DF["Math_Pass"] == "Pass")]
 school_type_group_pass_reading = schools_students_DF.loc[(schools_students_DF["Reading_Pass"] == "Pass")]
 
-
+#calculations
 st_total_students = school_type_group['Student_ID'].count()
 st_avg_math_score = school_type_group['Math_Score'].mean()
 st_avg_reading_score = school_type_group['Reading_Score'].mean()
 
-st_passing_math_df = school_type_group_pass_math.groupby("School Type")["Student_ID"].count()/st_total_students * 100
-st_passing_reading_df = school_type_group_pass_reading.groupby("School Type")["Student_ID"].count()/st_total_students * 100
-st_passing_overall_df = (st_passing_math_df + st_passing_reading_df) / 2
+st_passing_math = school_type_group_pass_math.groupby("School Type")["Student_ID"].count()/st_total_students * 100
+st_passing_reading = school_type_group_pass_reading.groupby("School Type")["Student_ID"].count()/st_total_students * 100
+st_passing_overall = (st_passing_math + st_passing_reading) / 2
 
+#create dictionay of lists 
 School_Type_Summary = { 
     "Average Math Score": st_avg_math_score,
     "Average Reading Score" : st_avg_reading_score,
-    "% Passing Math" : st_passing_math_df,
-    "% Passing Reading" : st_passing_reading_df,
-    "% Overall Passing Rate" : st_passing_overall_df
+    "% Passing Math" : st_passing_math,
+    "% Passing Reading" : st_passing_reading,
+    "% Overall Passing Rate" : st_passing_overall
 }
 
+#create dataframe
 School_Type_Summary_DF = pd.DataFrame(School_Type_Summary)
 
+#rearrange the columns
 School_Type_Summary_DF = School_Type_Summary_DF[[ 
     "Average Math Score",
     "Average Reading Score" ,

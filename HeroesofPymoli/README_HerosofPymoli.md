@@ -22,6 +22,7 @@
 
 
 ```python
+#Import statments for required Packages
 import os
 import json
 import pprint
@@ -33,6 +34,7 @@ InteractiveShell.ast_node_interactivity = "all"
 
 
 ```python
+#Open the JSON file and quick look on the data it contains.
 file = os.path.join('Resources', 'purchase_data2.json')
 json_df = pd.read_json(file)
 json_df.head()
@@ -205,6 +207,7 @@ json_df.describe()
 
 
 ```python
+# Find the unique player count. 
 unique_players = json_df["SN"].unique()
 player_count = len(unique_players)
 player_count_df = pd.DataFrame([{'Total Players' : player_count}])
@@ -252,11 +255,17 @@ player_count_df
 
 
 ```python
+#create lists to contain the required values
+#unique items count
 unique_Items_count = len(json_df["Item ID"].unique())
+#Average Price
 avg_pur_price = json_df["Price"].mean()
+#total number of purchases
 total_purchases = json_df["SN"].count()
+#total purchase amount
 total_revenue = json_df["Price"].sum()
 
+#create a Dataframe 
 purchasing_Analysis_PD = pd.DataFrame({
     "Number of Unique Items": [unique_Items_count],
     "Average Price": [avg_pur_price],
@@ -264,6 +273,7 @@ purchasing_Analysis_PD = pd.DataFrame({
     "Total Revenue": [total_revenue]
 })
 
+#rearrage the Data frame attributes
 purchasing_Analysis_PD = purchasing_Analysis_PD [[
     "Number of Unique Items",
     "Average Price",
@@ -272,6 +282,7 @@ purchasing_Analysis_PD = purchasing_Analysis_PD [[
     
 ]]
 
+#format the price and revenue columns to $
 purchasing_Analysis_PD["Average Price"] = purchasing_Analysis_PD["Average Price"].map("${0:,.2f}".format)
 purchasing_Analysis_PD["Total Revenue"] = purchasing_Analysis_PD["Total Revenue"].map("${0:,.2f}".format)
 
@@ -325,15 +336,20 @@ purchasing_Analysis_PD
 
 
 ```python
+#total players under each gender
 gender_count = json_df.groupby("Gender")["SN"].nunique()
+#% of players in each enger
 gender_percent = (gender_count / sum(gender_count)) * 100
 
+#join the series into a disctionary
 gender_demographics = {
     "Percentage of Players" : gender_percent ,
     "Total Count" : gender_count
 }
 
+#convert to a dataframe
 gender_demographics_DF = pd.DataFrame(gender_demographics)
+#use round() to format the values
 gender_demographics_DF = gender_demographics_DF.round(2)
 gender_demographics_DF 
 
@@ -395,11 +411,18 @@ gender_demographics_DF
 
 
 ```python
+#group the data set by "gender"
 gender_group = json_df.groupby("Gender")
+#total purhchases for each gender
 gender_purchase_count = gender_group["Item ID"].count()
+#average purchase price for each gender
 gender_purchase_avg = gender_group["Price"].mean()
+#total purchase price for each gender
 gender_purchase_tot = gender_group["Price"].sum()
+#normalized proce : total_price / unique number of users
 gender_purchase_nor = gender_group["Price"].sum() /gender_demographics_DF["Total Count"]
+
+#join the series into a dictionary
 gender_analysis = {
     "Purchase Count" : gender_purchase_count,
     "Average Purchase Price" : gender_purchase_avg,
@@ -407,7 +430,10 @@ gender_analysis = {
     "Normalized Totals" : gender_purchase_nor
 }
 
+#convert to a datafram
 gender_analysis_DF = pd.DataFrame(gender_analysis)
+
+#rearrage columns to make DF presentable
 gender_analysis_DF = gender_analysis_DF[[
     "Purchase Count",
     "Average Purchase Price",
@@ -415,6 +441,7 @@ gender_analysis_DF = gender_analysis_DF[[
     "Normalized Totals"
 ]]
 
+#format the required columns 
 gender_analysis_DF["Average Purchase Price"] = gender_analysis_DF["Average Purchase Price"].map("${0:,.2f}".format)
 gender_analysis_DF["Total Purchase Value"] = gender_analysis_DF["Total Purchase Value"].map("${0:,.2f}".format)
 gender_analysis_DF["Normalized Totals"] = gender_analysis_DF["Normalized Totals"].map("${0:,.2f}".format)
@@ -490,20 +517,27 @@ gender_analysis_DF
 
 
 ```python
+# create the required bins
 bins = [0, 10, 15, 20, 25 , 30, 35, 40, 100]
+#labels for thes bins
 group_names = ['<10', '10-14', '15-19', '20-24' , '25-29' , '30-34', '35-39' , '40+']
+#cut the data frame into bins based on the Age column
 json_df["Age Bin"] =  pd.cut(json_df["Age"], bins, labels=group_names)
 
-
+#total players in each age bin
 player_count = json_df["Age Bin"].value_counts()
+#percentage of players in each ageb bin
 player_per = player_count / len(json_df) * 100
 
+#create a list of dictionary
 age_demographics = {
     "Percentage of Players" : player_per ,
     "Total Count" : player_count
 }
 
+#convert to Dataframe
 age_demographics_DF = pd.DataFrame(age_demographics)
+#format required columns
 age_demographics_DF = age_demographics_DF.round(2)
 age_demographics_DF
 
@@ -586,15 +620,18 @@ age_demographics_DF
 
 
 ```python
+#group the data set based on the Age bin
 Age_group = json_df.groupby("Age Bin")
 #len(gender_group["Item ID"])
 
+#calculations to create lists of values for each bin
 age_purchase_count = Age_group["Item ID"].count()
 age_purchase_unique_count = Age_group["SN"].nunique()
 age_purchase_avg = Age_group["Price"].mean()
 age_purchase_tot = Age_group["Price"].sum()
 age_purchase_nor = Age_group["Price"].sum() / age_purchase_unique_count
  
+#join the lists into discitonary
 age_analysis = {
     "Purchase Count" : age_purchase_count,
     "Average Purchase Price" : age_purchase_avg,
@@ -602,7 +639,10 @@ age_analysis = {
     "Normalized Totals" : age_purchase_nor   
 }
 
+#convert to a dataframe
 age_analysis_DF = pd.DataFrame(age_analysis)
+
+#rearrange the DF to make it presentable
 age_analysis_DF = age_analysis_DF[[
     "Purchase Count",
     "Average Purchase Price",
@@ -610,6 +650,7 @@ age_analysis_DF = age_analysis_DF[[
     "Normalized Totals"
 ]]
 
+#frmat the required columns
 age_analysis_DF["Average Purchase Price"] = age_analysis_DF["Average Purchase Price"].map("${0:,.2f}".format)
 age_analysis_DF["Total Purchase Value"] = age_analysis_DF["Total Purchase Value"].map("${0:,.2f}".format)
 age_analysis_DF["Normalized Totals"] = age_analysis_DF["Normalized Totals"].map("${0:,.2f}".format)
@@ -721,31 +762,38 @@ age_analysis_DF
 
 
 ```python
+#create a join data set based on SN
 Spender_group = json_df.groupby("SN")
 
+#calcualte the lists for total purchases , average_spend, total_spend
 Spender_purchase_count = Spender_group["Item ID"].count()
 Spender_purchase_avg = Spender_group["Price"].mean()
 Spender_purchase_tot = Spender_group["Price"].sum()
 
-
+#convert into a dictionary
 spender_analysis = {
     "Purchase Count" : Spender_purchase_count,
     "Average Purchase Price" : Spender_purchase_avg,
     "Total Purchase Value" : Spender_purchase_tot  
 }
 
+#convert into a dataframe
 spender_analysis_DF = pd.DataFrame(spender_analysis)
+#rearrange the columns 
 spender_analysis_DF = spender_analysis_DF[[
     "Purchase Count",
     "Average Purchase Price",
     "Total Purchase Value"
 ]]
 
+#format the reqired columns
 spender_analysis_DF["Average Purchase Price"] = spender_analysis_DF["Average Purchase Price"].map("${0:,.2f}".format)
 spender_analysis_DF["Total Purchase Value"] = spender_analysis_DF["Total Purchase Value"].map("${0:,.2f}".format)
 
-
+#sort in Descending order, this will help to display top spender
 spender_analysis_DF = spender_analysis_DF.sort_values(by="Purchase Count", ascending=False)
+
+#display first 5 records : top 5 spenders
 spender_analysis_DF.head(5)
 
 ```
@@ -823,23 +871,30 @@ spender_analysis_DF.head(5)
 
 
 ```python
+#calculations to create lists for item_price, item_count, total_price
 item_price = json_df.groupby(['Item ID', 'Item Name'])['Price'].min()
 item_count = json_df.groupby(['Item ID', 'Item Name'])['SN'].count()
 item_totPrice = json_df.groupby(['Item ID', 'Item Name'])['Price'].sum()
 
+#create dictionary
 popular_analysis = {
     "Purchase Count" : item_count,
     "Item Price" : item_price,
     "Total Purchase Value" : item_totPrice 
 }
 
+#create dataframe
 popular_analysis_DF = pd.DataFrame(popular_analysis)
+#rearrange columns
 popular_analysis_DF = popular_analysis_DF[[
     "Purchase Count",
     "Item Price",
     "Total Purchase Value"
 ]]
+
+#sort the dataframe in descednding order to diplay popular items based on the items sold
 popular_analysis_DF = popular_analysis_DF.sort_values(by="Purchase Count", ascending=False)
+#display first 5 records : top 5 popular items
 popular_analysis_DF.head(5)
 ```
 
@@ -923,7 +978,9 @@ popular_analysis_DF.head(5)
 
 
 ```python
+#sort the dataframe in descednding order to diplay popular items based on the total purchase value
 popular_analysis_DF = popular_analysis_DF.sort_values(by="Total Purchase Value", ascending=False)
+#display first 5 records : top 5 profitable items
 popular_analysis_DF.head(5)
 ```
 
